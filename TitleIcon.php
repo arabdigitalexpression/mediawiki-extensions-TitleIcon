@@ -166,35 +166,41 @@ class TitleIcon {
 			$page = $iconinfo["page"];
 			$icon = $iconinfo["icon"];
 
-			$filetitle = Title::newFromText( "File:" . $icon );
-			$imagefile = wfFindFile( $filetitle );
+			if ( substr( $icon, 0, 2 ) !== '&#' ) {
+			//the icon is from a file page
+				$filetitle = Title::newFromText( "File:" . $icon );
+				$imagefile = wfFindFile( $filetitle );
+	
+				if ( $imagefile !== false ) {
 
-			if ( $imagefile !== false ) {
-
-				if ( $this->useFileNameAsToolTip ) {
-					$tooltip = $icon;
-					if ( strpos( $tooltip, '.' ) !== false ) {
-						$tooltip =
-							substr( $tooltip, 0, strpos( $tooltip, '.' ) );
+					if ( $this->useFileNameAsToolTip ) {
+						$tooltip = $icon;
+						if ( strpos( $tooltip, '.' ) !== false ) {
+							$tooltip =
+								substr( $tooltip, 0, strpos( $tooltip, '.' ) );
+						}
+					} else {
+						$tooltip = $page;
 					}
-				} else {
-					$tooltip = $page;
+
+					$frameParams = [];
+					$frameParams['link-title'] = $page;
+					$frameParams['alt'] = $tooltip;
+					$frameParams['title'] = $tooltip;
+					$handlerParams = [
+						'width' => '36',
+						'height' => '36'
+					];
+
+					$iconhtml .= Linker::makeImageLink( $GLOBALS['wgParser'],
+						$filetitle, $imagefile, $frameParams, $handlerParams ) .
+						"&nbsp;";
 				}
-
-				$frameParams = [];
-				$frameParams['link-title'] = $page;
-				$frameParams['alt'] = $tooltip;
-				$frameParams['title'] = $tooltip;
-				$handlerParams = [
-					'width' => '36',
-					'height' => '36'
-				];
-
-				$iconhtml .= Linker::makeImageLink( $GLOBALS['wgParser'],
-					$filetitle, $imagefile, $frameParams, $handlerParams ) .
-					"&nbsp;";
+			} else { 
+			//The icon is a Unicode character
+				$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
+				$iconhtml .= $linkRenderer->makeLink( $page, new HtmlArmor( $icon ) ) .	"&nbsp;";
 			}
-
 		}
 
 		return $iconhtml;
